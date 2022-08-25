@@ -87,6 +87,8 @@ def get_transform(opt, params=None, grayscale=False, method=transforms.Interpola
         transform_list.append(transforms.Resize(osize, method))
     elif 'scale_width' in opt.preprocess:
         transform_list.append(transforms.Lambda(lambda img: __scale_width(img, opt.load_size, opt.crop_size, method)))
+    elif 'scale_shortside' in opt.preprocess:   # scale the shortside to load_size
+        transform_list.append(transforms.Lambda(lambda img: __scale_shortside(img, opt.load_size, opt.crop_size, method)))
 
     if 'crop' in opt.preprocess:
         if params is None:
@@ -130,6 +132,12 @@ def __scale_width(img, target_size, crop_size, method=transforms.InterpolationMo
     w = target_size
     h = int(max(target_size * oh / ow, crop_size))
     return img.resize((w, h), method)
+
+def __scale_shortside(img, target_width, crop_width, method=transforms.InterpolationMode.BICUBIC):
+    ow, oh = img.size
+    shortside = min(ow, oh)
+    scale = target_width / shortside
+    return img.resize((round(ow * scale), round(oh * scale)), method)
 
 
 def __crop(img, pos, size):
